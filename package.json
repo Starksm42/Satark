@@ -8,7 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "cap:sync": "cap sync android",
+    "cap:build": "npm run build && npm run cap:sync",
+    "apk:debug": "cd android && ./gradlew assembleDebug",
+    "apk:release": "cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",
