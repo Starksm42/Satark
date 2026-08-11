@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Offline Transport Manager</string>
+    <string name="title_activity_main">Offline Transport Manager</string>
+    <string name="package_name">com.offlinetransport.manager</string>
+    <string name="custom_url_scheme">com.offlinetransport.manager</string>
+</resources>

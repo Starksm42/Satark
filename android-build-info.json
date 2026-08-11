@@ -1,0 +1,42 @@
+{
+  "project_name": "Offline Transport Manager",
+  "android_16_compatibility": {
+    "api_level": 36,
+    "codename": "Baklava",
+    "compatibility_status": "Fully Configured"
+  },
+  "build_environment_requirements": {
+    "java_jdk_version": "Java 21 (OpenJDK 21)",
+    "gradle_version": "8.14.3",
+    "gradle_distribution_url": "https://services.gradle.org/distributions/gradle-8.14.3-all.zip",
+    "android_sdk_tools": {
+      "compile_sdk_version": 36,
+      "target_sdk_version": 36,
+      "minimum_sdk_version": 24,
+      "recommended_build_tools_version": "35.0.0"
+    }
+  },
+  "sdk_manager_packages": [
+    "platform-tools",
+    "platforms;android-36",
+    "build-tools;35.0.0"
+  ],
+  "manual_build_instructions": {
+    "prerequisites": [
+      "Install Java JDK 21 and ensure JAVA_HOME environment variable is set.",
+      "Install Android Command Line Tools / SDK Manager.",
+      "Set ANDROID_HOME environment variable to your Android SDK path.",
+      "Add $ANDROID_HOME/cmdline-tools/latest/bin and $ANDROID_HOME/platform-tools to your system PATH."
+    ],
+    "steps": [
+      "Ensure local.properties has 'sdk.dir' correctly pointing to your Android SDK directory.",
+      "Navigate to the 'android' subdirectory of the project: cd android",
+      "Run the Gradle wrapper assemble task: ./gradlew assembleDebug",
+      "The generated APK will be available in: android/app/build/outputs/apk/debug/app-debug.apk"
+    ],
+    "environment_variables_example": {
+      "linux_mac": "export JAVA_HOME=/path/to/jdk-21\nexport ANDROID_HOME=/path/to/android-sdk\nexport PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH",
+      "windows": "set JAVA_HOME=C:\\Path\\To\\jdk-21\nset ANDROID_HOME=C:\\Path\\To\\android-sdk\nset PATH=%JAVA_HOME%\\bin;%ANDROID_HOME%\\cmdline-tools\\latest\\bin;%ANDROID_HOME%\\platform-tools;%PATH%"
+    }
+  }
+}

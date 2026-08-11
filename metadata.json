@@ -1,0 +1,6 @@
+{
+  "name": "Offline Transport Manager",
+  "description": "A complete offline-first management app for transport businesses, tracking vehicles, drivers, fuel records, expenses, and automated reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
