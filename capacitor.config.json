@@ -1,5 +1,11 @@
 {
-  "appId": "com.offlinetransport.manager",
-  "appName": "Offline Transport Manager",
-  "webDir": "dist"
+  "appId": "com.satark.app",
+  "appName": "Satark",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "path": "android"
+  }
 }
