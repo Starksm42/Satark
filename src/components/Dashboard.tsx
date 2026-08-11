@@ -35,7 +35,11 @@ import {
   UserCheck,
   UserX,
   Activity,
-  Compass
+  Compass,
+  Wrench,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -126,6 +130,7 @@ const DEFAULT_WIDGETS: Widget[] = [
   { id: 'welcome', title: 'Welcome Header', description: 'Displays company branding and real-time clock', enabled: true, gridSpan: 'full' },
   { id: 'quick-actions', title: 'Quick Actions Bar', description: 'Direct links to log income, expense, or fuel', enabled: true, gridSpan: 'full' },
   { id: 'today-activities', title: "Today's Quick Tally", description: 'Active daily transaction summaries', enabled: true, gridSpan: 'full' },
+  { id: 'maintenance-cost', title: 'Maintenance Cost Audit', description: 'Visualizes total maintenance expense per vehicle and flags those exceeding fleet average', enabled: true, gridSpan: 'half' },
   { id: 'monthly-income', title: 'Monthly Income Card', description: 'Summarizes accumulated cash flow for the active month', enabled: true, gridSpan: 'third' },
   { id: 'monthly-expenses', title: 'Monthly Expenses Card', description: 'Summarizes cash outflow for the active month', enabled: true, gridSpan: 'third' },
   { id: 'fuel-trend', title: 'Fuel Mileage Trend', description: 'Calculates active fuel efficiency ratios', enabled: true, gridSpan: 'third' },
@@ -174,13 +179,14 @@ export const WIDGET_TEMPLATES: WidgetTemplate[] = [
     id: 'fleet-status',
     name: 'Fleet Status & Operations',
     category: 'Fleet Operations',
-    description: 'Tailored for fleet managers & dispatchers: monitors active vehicle statuses, driver revenue, mileage efficiency, and daily trips.',
+    description: 'Tailored for fleet managers & dispatchers: monitors active vehicle statuses, driver revenue, mileage efficiency, maintenance costs, and daily trips.',
     iconType: 'truck',
-    badgeText: '8 Operational Cards',
+    badgeText: '9 Operational Cards',
     widgetIds: [
       'welcome',
       'quick-actions',
       'today-activities',
+      'maintenance-cost',
       'fleet-summaries',
       'top-earning-vehicle',
       'top-earning-driver',
@@ -193,12 +199,13 @@ export const WIDGET_TEMPLATES: WidgetTemplate[] = [
     id: 'fuel-cost-control',
     name: 'Fuel & Cost Control',
     category: 'Expense Audit',
-    description: 'Highlights fuel efficiency trends, refueling costs, total vehicle expenses, and live transaction ledgers.',
+    description: 'Highlights fuel efficiency trends, refueling costs, vehicle maintenance audit, total expenses, and live transaction ledgers.',
     iconType: 'fuel',
-    badgeText: '8 Expense Cards',
+    badgeText: '9 Expense Cards',
     widgetIds: [
       'welcome',
       'quick-actions',
+      'maintenance-cost',
       'fuel-trend',
       'monthly-fuel-spend',
       'monthly-expenses',
@@ -229,13 +236,14 @@ export const WIDGET_TEMPLATES: WidgetTemplate[] = [
     id: 'executive-complete',
     name: 'Executive Master Dashboard',
     category: 'Full Analytics',
-    description: 'Enables all 15 operational, financial, and fuel metrics in a comprehensive multi-column layout.',
+    description: 'Enables all 16 operational, maintenance, financial, and fuel metrics in a comprehensive multi-column layout.',
     iconType: 'sparkles',
-    badgeText: 'All 15 Cards Enabled',
+    badgeText: 'All 16 Cards Enabled',
     widgetIds: [
       'welcome',
       'quick-actions',
       'today-activities',
+      'maintenance-cost',
       'monthly-income',
       'monthly-expenses',
       'fuel-trend',
@@ -499,6 +507,69 @@ export const Dashboard: React.FC<{
     return db.income.reduce((sum, item) => sum + (item.balance || 0), 0);
   }, [db.income]);
 
+  // Maintenance cost audit calculation
+  const maintenanceMetrics = useMemo(() => {
+    const keywords = ['maintenance', 'service', 'repair', 'tyre', 'tire', 'oil', 'spare', 'garage', 'mechanic', 'breakdown', 'parts', 'rto', 'fitness', 'permit', 'wash', 'grease', 'alignment', 'retread', 'puncture'];
+
+    const maintenanceExpenses = db.expenses.filter(e => {
+      if (!e.category) return false;
+      const cat = e.category.toLowerCase();
+      const sub = (e.subCategory || '').toLowerCase();
+      return (
+        cat === 'maintenance' ||
+        cat === 'service' ||
+        cat === 'tyre' ||
+        cat === 'engine oil' ||
+        keywords.some(k => cat.includes(k) || sub.includes(k))
+      );
+    });
+
+    const totalFleetMaintenance = maintenanceExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    const vehicleMap: Record<string, { total: number; count: number; items: typeof maintenanceExpenses }> = {};
+
+    db.vehicles.forEach(v => {
+      vehicleMap[v.id] = { total: 0, count: 0, items: [] };
+    });
+
+    maintenanceExpenses.forEach(e => {
+      if (e.vehicleId && vehicleMap[e.vehicleId]) {
+        vehicleMap[e.vehicleId].total += e.amount;
+        vehicleMap[e.vehicleId].count += 1;
+        vehicleMap[e.vehicleId].items.push(e);
+      }
+    });
+
+    const totalVehiclesCount = db.vehicles.length || 1;
+    const fleetAverageCost = totalFleetMaintenance / totalVehiclesCount;
+
+    const vehicleStats = db.vehicles.map(v => {
+      const stat = vehicleMap[v.id] || { total: 0, count: 0, items: [] };
+      const exceedsAverage = stat.total > fleetAverageCost && fleetAverageCost > 0;
+      const excessAmount = stat.total - fleetAverageCost;
+      const percentageOfAvg = fleetAverageCost > 0 ? (stat.total / fleetAverageCost) * 100 : 0;
+      return {
+        vehicle: v,
+        totalMaintenance: stat.total,
+        maintenanceCount: stat.count,
+        items: stat.items,
+        exceedsAverage,
+        excessAmount: excessAmount > 0 ? excessAmount : 0,
+        percentageOfAvg
+      };
+    }).sort((a, b) => b.totalMaintenance - a.totalMaintenance);
+
+    const highMaintenanceVehiclesCount = vehicleStats.filter(v => v.exceedsAverage).length;
+
+    return {
+      totalFleetMaintenance,
+      fleetAverageCost,
+      vehicleStats,
+      highMaintenanceVehiclesCount,
+      totalMaintenanceExpensesCount: maintenanceExpenses.length
+    };
+  }, [db.expenses, db.vehicles]);
+
   // Filter history based on search query by vehicle number, vehicle name, driver name, customer name, or category
   const filteredHistory = useMemo(() => {
     const history = metrics.combinedHistory;
@@ -742,6 +813,209 @@ export const Dashboard: React.FC<{
             </div>
           </TactileWidget>
         );
+      case 'maintenance-cost': {
+        const {
+          totalFleetMaintenance,
+          fleetAverageCost,
+          vehicleStats,
+          highMaintenanceVehiclesCount,
+          totalMaintenanceExpensesCount
+        } = maintenanceMetrics;
+
+        const maxMaintenance = Math.max(...vehicleStats.map(s => s.totalMaintenance), fleetAverageCost * 1.2, 1);
+
+        return (
+          <TactileWidget id="maintenance-cost" className="bg-white dark:bg-slate-800 p-6 border h-full min-h-[340px]">
+            {/* Widget Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 border-b border-slate-100 dark:border-slate-700/60 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg font-display text-slate-900 dark:text-white">
+                    Maintenance Cost per Vehicle
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Expense audit & fleet average benchmark threshold
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {highMaintenanceVehiclesCount > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                    {highMaintenanceVehiclesCount} {highMaintenanceVehiclesCount === 1 ? 'Vehicle Exceeds' : 'Vehicles Exceed'} Avg
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    All Vehicles Within Range
+                  </span>
+                )}
+
+                <button
+                  onClick={() => onNavigateToTab('expenses')}
+                  className="text-xs font-semibold text-brand hover:text-brand-hover flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Log Expense</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Summary Stat Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700/60">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Fleet Maintenance Total
+                </p>
+                <p className="text-lg font-black font-display text-slate-900 dark:text-white mt-0.5">
+                  {formatCurrency(totalFleetMaintenance, currency)}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {totalMaintenanceExpensesCount} total service entries
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                  Fleet Average / Vehicle
+                </p>
+                <p className="text-lg font-black font-display text-indigo-900 dark:text-indigo-200 mt-0.5">
+                  {formatCurrency(fleetAverageCost, currency)}
+                </p>
+                <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 mt-0.5">
+                  Benchmark for {vehicleStats.length} active vehicles
+                </p>
+              </div>
+
+              <div className={`p-3.5 rounded-2xl border ${
+                highMaintenanceVehiclesCount > 0
+                  ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/50'
+                  : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/50'
+              }`}>
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${
+                  highMaintenanceVehiclesCount > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'
+                }`}>
+                  High Maintenance Alerts
+                </p>
+                <p className={`text-lg font-black font-display mt-0.5 ${
+                  highMaintenanceVehiclesCount > 0 ? 'text-rose-900 dark:text-rose-200' : 'text-emerald-900 dark:text-emerald-200'
+                }`}>
+                  {highMaintenanceVehiclesCount} {highMaintenanceVehiclesCount === 1 ? 'Vehicle' : 'Vehicles'}
+                </p>
+                <p className={`text-[10px] mt-0.5 ${
+                  highMaintenanceVehiclesCount > 0 ? 'text-rose-600/80 dark:text-rose-400/80' : 'text-emerald-600/80 dark:text-emerald-400/80'
+                }`}>
+                  {highMaintenanceVehiclesCount > 0 ? 'Exceeds average threshold' : 'Optimal maintenance efficiency'}
+                </p>
+              </div>
+            </div>
+
+            {/* Per-Vehicle Maintenance Progress Bars */}
+            <div className="space-y-3.5">
+              <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+                <span>Vehicle Breakdown</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                  Fleet Avg Benchmark: {formatCurrency(fleetAverageCost, currency)}
+                </span>
+              </div>
+
+              {vehicleStats.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-sm">
+                  No vehicle records found in database.
+                </div>
+              ) : (
+                vehicleStats.map(({ vehicle, totalMaintenance, maintenanceCount, exceedsAverage, excessAmount }) => {
+                  const barWidthPercent = Math.min(100, Math.max(4, (totalMaintenance / maxMaintenance) * 100));
+                  const avgLinePositionPercent = Math.min(100, (fleetAverageCost / maxMaintenance) * 100);
+
+                  return (
+                    <div
+                      key={vehicle.id}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        exceedsAverage
+                          ? 'bg-rose-50/50 dark:bg-rose-950/25 border-rose-200/90 dark:border-rose-900/70 shadow-sm'
+                          : 'bg-slate-50/80 dark:bg-slate-700/30 border-slate-100 dark:border-slate-700/50'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`p-2 rounded-xl shrink-0 ${
+                            exceedsAverage
+                              ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
+                              : 'bg-slate-200/80 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                          }`}>
+                            <Truck className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-900 dark:text-slate-100 font-display">
+                                {vehicle.number}
+                              </span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                ({vehicle.name})
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {maintenanceCount} {maintenanceCount === 1 ? 'service entry' : 'service entries'} logged
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto mt-1 sm:mt-0">
+                          <span className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
+                            {formatCurrency(totalMaintenance, currency)}
+                          </span>
+                          {exceedsAverage ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
+                              <AlertTriangle className="w-3 h-3 shrink-0" />
+                              Exceeds Avg (+{formatCurrency(excessAmount, currency)})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md">
+                              <CheckCircle2 className="w-3 h-3 shrink-0" />
+                              Within Fleet Avg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bar Visualization with Fleet Average Benchmark Marker Line */}
+                      <div className="relative mt-3">
+                        <div className="w-full bg-slate-200 dark:bg-slate-700/80 h-2.5 rounded-full overflow-hidden relative">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              exceedsAverage
+                                ? 'bg-gradient-to-r from-amber-500 to-rose-600'
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                            }`}
+                            style={{ width: `${barWidthPercent}%` }}
+                          />
+                        </div>
+
+                        {/* Benchmark Line */}
+                        {fleetAverageCost > 0 && (
+                          <div
+                            className="absolute -top-1 bottom-0 w-0.5 bg-amber-500 z-10 shadow-sm"
+                            style={{ left: `${avgLinePositionPercent}%` }}
+                            title={`Fleet Average: ${formatCurrency(fleetAverageCost, currency)}`}
+                          >
+                            <div className="absolute -top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-amber-500 border border-white dark:border-slate-900" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </TactileWidget>
+        );
+      }
       case 'monthly-income':
         return (
           <TactileWidget id="monthly-income" className="bg-slate-900 text-white p-6 border-slate-800 shadow-lg min-h-[160px]">

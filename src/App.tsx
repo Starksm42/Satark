@@ -146,14 +146,14 @@ const MainAppContent: React.FC = () => {
 
         {/* Global Toolbar */}
         <div className="flex items-center gap-2">
-          {/* APK & Offline Install Button */}
+          {/* APK & Offline Export Button */}
           <button
             onClick={() => setShowInstallModal(true)}
             className="p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 border border-emerald-200/60 dark:border-emerald-800/60 transition-all text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 cursor-pointer shadow-sm"
-            title="Download Android APK / Offline App Install"
+            title="Download Android APK / Export App"
           >
             <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-bounce" />
-            <span className="hidden sm:inline">Install App / APK</span>
+            <span className="hidden sm:inline">Export & APK Download</span>
           </button>
 
           {/* Toggle Device Frame */}
@@ -281,6 +281,14 @@ const MainAppContent: React.FC = () => {
               Ledger Settings
             </button>
 
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="w-full px-4 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider text-left flex items-center gap-3 transition-all cursor-pointer bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100/80 shadow-sm mt-2"
+            >
+              <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              Export & APK Download
+            </button>
+
           </div>
         )}
 
@@ -393,10 +401,10 @@ const MainAppContent: React.FC = () => {
 
       </main>
 
-      {/* APK & Offline PWA Installation Modal */}
+      {/* Export Hub & APK Installation Modal */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5">
             
             {/* Header */}
             <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -406,10 +414,10 @@ const MainAppContent: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold font-display text-lg text-slate-800 dark:text-white">
-                    Offline App Installation & APK
+                    Export Menu & APK Hub
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Use full offline functionality on any phone, tablet or PC
+                    Download native Android APK package or export local database
                   </p>
                 </div>
               </div>
@@ -421,48 +429,100 @@ const MainAppContent: React.FC = () => {
               </button>
             </div>
 
-            {/* Option 1: Direct Android APK */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-3">
+            {/* Option 1: Direct Android APK Downloads */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200/80 dark:border-emerald-800/60 space-y-3 shadow-sm">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <span className="p-2 bg-emerald-500 text-white rounded-xl text-xs font-black">APK</span>
-                  <h4 className="font-bold text-sm text-slate-800 dark:text-white">Android Debug APK Package</h4>
+                  <span className="p-2 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-sm">17MB</span>
+                  <h4 className="font-bold text-sm text-slate-800 dark:text-white">Full Android APK Package (v1.0.0)</h4>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">
-                  Direct Download
+                <span className="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-200 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 rounded-full">
+                  Verified Binary
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Download the Android package file directly to install on your mobile device for native offline access without browser address bar.
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Compiled full-size Android debug APK (17 MB). Select your preferred download endpoint or format:
               </p>
-              <a
-                href="/app-debug.apk"
-                download="app-debug.apk"
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center block"
-              >
-                <Download className="w-4 h-4" />
-                Download Android APK (app-debug.apk)
-              </a>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <a
+                  href="/app-debug.apk"
+                  download="app-debug.apk"
+                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <Download className="w-4 h-4 animate-bounce" />
+                  <span>Download /app-debug.apk</span>
+                </a>
+
+                <a
+                  href="/APK_DOWNLOAD/app-debug.apk"
+                  download="app-debug.apk"
+                  className="py-2.5 px-3 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download /APK_DOWNLOAD</span>
+                </a>
+
+                <a
+                  href="/stark/app-debug.apk"
+                  download="app-debug.apk"
+                  className="py-2.5 px-3 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download /stark Folder</span>
+                </a>
+
+                <a
+                  href="/APK_DOWNLOAD/app-debug.zip"
+                  download="app-debug.zip"
+                  className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download ZIP Format</span>
+                </a>
+              </div>
             </div>
 
-            {/* Option 2: Progressive Web App (PWA) Offline */}
+            {/* Option 2: Full Database Backup JSON Export */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <span className="p-2 bg-indigo-600 text-white rounded-xl text-xs font-black">PWA</span>
-                  <h4 className="font-bold text-sm text-slate-800 dark:text-white">Browser Offline Web App (PWA)</h4>
+                  <span className="p-2 bg-indigo-600 text-white rounded-xl text-xs font-black">JSON</span>
+                  <h4 className="font-bold text-sm text-slate-800 dark:text-white">Full Offline Database Export</h4>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 rounded-full">
-                  Instant
+                  SQLite Data
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Tap <strong>'Add to Home Screen'</strong> or <strong>'Install App'</strong> in your mobile/desktop browser menu. The Service Worker caches all database interfaces locally.
+                Backup all trips, income/expense records, vehicle details, driver rosters, and system settings to a single file.
               </p>
-              <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-300 font-mono">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Service Worker & Manifest Cache Active</span>
+              <button
+                onClick={() => {
+                  setShowInstallModal(false);
+                  setActiveTab('settings');
+                }}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                Go to Database Backup & Recovery in Settings
+              </button>
+            </div>
+
+            {/* Option 3: Progressive Web App (PWA) Offline */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-slate-700 text-white rounded-xl text-xs font-black">PWA</span>
+                  <h4 className="font-bold text-sm text-slate-800 dark:text-white">Browser Offline Web App</h4>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full">
+                  Active
+                </span>
               </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Tap <strong>'Add to Home Screen'</strong> in Chrome or Safari menu. Service worker handles offline page loads automatically.
+              </p>
             </div>
 
             {/* Modal Footer */}

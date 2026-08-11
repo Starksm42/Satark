@@ -15,7 +15,10 @@ import {
   Calendar,
   Fuel,
   ChevronDown,
-  Edit2
+  Edit2,
+  Smartphone,
+  Package,
+  FileDown
 } from 'lucide-react';
 
 interface RecordsProps {
@@ -456,8 +459,17 @@ export const Records: React.FC<RecordsProps> = ({ onPrint }) => {
           </p>
         </div>
         
-        {/* Export Buttons */}
+        {/* Export & Download Buttons */}
         <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full xl:w-auto">
+          <a
+            href="/app-debug.apk"
+            download="app-debug.apk"
+            className="flex-1 sm:flex-none px-3.5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer border border-violet-500/30"
+            title="Download Android APK Package (app-debug.apk)"
+          >
+            <Smartphone className="w-4 h-4 text-violet-200" />
+            Download APK
+          </a>
           <button
             onClick={() => setIsTrashOpen(true)}
             className="flex-1 sm:flex-none px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 text-rose-500 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all border border-rose-100/50 dark:border-rose-500/10 cursor-pointer"
